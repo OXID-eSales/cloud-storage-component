@@ -1,0 +1,22 @@
+{
+  "name": "oxid-esales/aws-s3-component",
+  "description": "Component used to upload images to the AWS S3",
+  "homepage": "https://www.oxid-esales.com",
+  "license": [
+    "GPL-3.0-only"
+  ],
+  "type": "oxideshop-component",
+  "require": {
+    "php": ">=7.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "OxidEsales\\AwsS3Component\\": "./src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "OxidEsales\\AwsS3Component\\Tests\\": "./tests"
+    }
+  }
+}
