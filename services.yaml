@@ -2,3 +2,24 @@ services:
   _defaults:
     autowire: true
     public: false
+
+  OxidEsales\AwsS3Component\Service\S3ClientServiceInterface:
+    class: OxidEsales\AwsS3Component\Service\S3ClientService
+    arguments:
+      - '%aws.s3.key%'
+      - '%aws.s3.secret%'
+      - '%aws.s3.region%'
+      - '%aws.s3.version%'
+
+  OxidEsales\AwsS3Component\Service\CommunicationManagerInterface:
+    class: OxidEsales\AwsS3Component\Service\CommunicationManager
+    arguments:
+      - '@OxidEsales\AwsS3Component\Service\S3ClientServiceInterface'
+
+  OxidEsales\EshopCommunity\Internal\Framework\FileSystem\MasterImageHandlerInterface:
+    class: OxidEsales\AwsS3Component\Service\MasterImageHandler
+    arguments:
+      - '@OxidEsales\AwsS3Component\Service\CommunicationManagerInterface'
+      - '@oxid_esales.symfony.file_system'
+      - '%aws.s3.image.bucket%'
+    public: true
