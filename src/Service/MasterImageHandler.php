@@ -9,13 +9,14 @@ declare(strict_types=1);
 
 namespace OxidEsales\AwsS3Component\Service;
 
+use Aws\S3\S3Client;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\MasterImageHandlerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
 class MasterImageHandler implements MasterImageHandlerInterface
 {
-    /** @var CommunicationManagerInterface */
-    private $communicationManager;
+    /** @var S3Client */
+    private $s3Client;
 
     /** @var Filesystem */
     private $filesystem;
@@ -23,19 +24,25 @@ class MasterImageHandler implements MasterImageHandlerInterface
     /** @var string */
     private $imageBucketName;
 
+    /** @var string */
+    private $imageBucketAcl;
+
     /**
-     * @param CommunicationManagerInterface $communicationManager
-     * @param Filesystem                    $filesystem
-     * @param string                        $imageBucketName
+     * @param S3Client   $s3Client
+     * @param Filesystem $filesystem
+     * @param string     $imageBucketName
+     * @param string     $imageBucketAcl
      */
     public function __construct(
-        CommunicationManagerInterface $communicationManager,
+        S3Client $s3Client,
         Filesystem $filesystem,
-        string $imageBucketName
+        string $imageBucketName,
+        string $imageBucketAcl
     ) {
-        $this->communicationManager = $communicationManager;
+        $this->s3Client = $s3Client;
         $this->filesystem = $filesystem;
         $this->imageBucketName = $imageBucketName;
+        $this->imageBucketAcl = $imageBucketAcl;
     }
 
     /**
@@ -44,10 +51,8 @@ class MasterImageHandler implements MasterImageHandlerInterface
      */
     public function upload(string $source, string $destination): void
     {
-        $this->communicationManager->publish(
+        $this->putObject(
             $source,
-            $this->imageBucketName,
-            CommunicationManager::ACL_PUBLIC_READ,
             $destination
         );
 
@@ -60,10 +65,8 @@ class MasterImageHandler implements MasterImageHandlerInterface
      */
     public function copy(string $source, string $destination): void
     {
-        $this->communicationManager->publish(
+        $this->putObject(
             $source,
-            $this->imageBucketName,
-            CommunicationManager::ACL_PUBLIC_READ,
             $destination
         );
     }
@@ -73,7 +76,10 @@ class MasterImageHandler implements MasterImageHandlerInterface
      */
     public function remove(string $path): void
     {
-        $this->communicationManager->remove($path, $this->imageBucketName);
+        $this->s3Client->deleteObject([
+            'Bucket' => $this->imageBucketName,
+            'Key'    => $path
+        ]);
     }
 
     /**
@@ -83,6 +89,21 @@ class MasterImageHandler implements MasterImageHandlerInterface
      */
     public function exists(string $path): bool
     {
-        return $this->communicationManager->exists($path, $this->imageBucketName);
+        return $this->s3Client->doesObjectExist(
+            $this->imageBucketName,
+            $path
+        );
+    }
+
+    private function putObject(string $sourceFile, string $destinationInBucket): void
+    {
+        $object = [
+            'Bucket' => $this->imageBucketName,
+            'Key'    => $destinationInBucket,
+            'SourceFile' => $sourceFile,
+            'ACL'    => $this->imageBucketAcl,
+        ];
+
+        $this->s3Client->putObject($object);
     }
 }
