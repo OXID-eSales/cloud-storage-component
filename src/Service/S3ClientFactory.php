@@ -9,11 +9,10 @@ declare(strict_types=1);
 
 namespace OxidEsales\AwsS3Component\Service;
 
-use OxidEsales\AwsS3Component\Exception\ConnectionFailedException;
 use Aws\S3\S3Client;
 use Aws\Credentials\Credentials;
 
-class S3ClientService implements S3ClientServiceInterface
+class S3ClientFactory
 {
     /** @var string */
     private $key;
@@ -43,24 +42,15 @@ class S3ClientService implements S3ClientServiceInterface
 
     /**
      * @return S3Client
-     * @throws ConnectionFailedException
      */
     public function getS3Client(): S3Client
     {
         $credentials = new Credentials($this->key, $this->secret);
 
-        try {
-            $s3Client = new S3Client([
-              'region'  => $this->region,
-              'version' => $this->version,
-              'credentials' => $credentials
-            ]);
-
-            $s3Client->listBuckets();
-        } catch (\Throwable $e) {
-            Throw new ConnectionFailedException("Connection to AWS S3 failed. Please check the credentials.");
-        }
-
-        return $s3Client;
+        return new S3Client([
+          'region'  => $this->region,
+          'version' => $this->version,
+          'credentials' => $credentials
+        ]);
     }
 }
