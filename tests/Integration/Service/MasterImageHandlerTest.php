@@ -1,222 +1,110 @@
 <?php
 
+/**
+ * Copyright © OXID eSales AG. All rights reserved.
+ * See LICENSE file for license details.
+ */
+
+declare(strict_types=1);
+
 namespace OxidEsales\AwsS3Component\Tests\Integration\Service;
 
-use OxidEsales\AwsS3Component\Service\MasterImageHandler;
-use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
-use Symfony\Component\Filesystem\Filesystem;
-use Aws\S3\Exception\S3Exception;
 use Aws\Credentials\Credentials;
 use Aws\S3\S3Client;
+use OxidEsales\AwsS3Component\Service\MasterImageHandler;
+use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\MasterImageHandlerInterface;
+use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
 
 final class MasterImageHandlerTest extends TestCase
 {
-    /** @var S3Client */
-    private $s3Client;
-
     /** @var string */
-    private $testFilePath = __DIR__ . '/Fixtures/test-file.txt';
-
+    private $source;
     /** @var string */
-    private $bucketName;
-
-    /** @var string */
-    private $destination = 'tets-picture/test-file.txt';
-
-    /** @var string */
-    private $acl;
-
+    private $destination;
     /** @var Filesystem */
     private $filesystem;
+    /** @var MasterImageHandlerInterface */
+    private $masterImageHandler;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $container = (new TestContainerFactory())->create();
-        $this->bucketName = $container->getParameter('aws.s3.image.bucket');
-        $this->acl = $container->getParameter('aws.s3.image.bucket.acl');
-
-        $credentials = new Credentials(
-            $container->getParameter('aws.s3.key'),
-            $container->getParameter('aws.s3.secret')
-        );
-
-        $this->s3client = new S3Client([
-            'region'  => $container->getParameter('aws.s3.region'),
-            'version' => $container->getParameter('aws.s3.version'),
-            'credentials' => $credentials
-        ]);
-
-        $this->filesystem = new Filesystem();
-        $this->filesystem->touch($this->testFilePath);
+        $this->initImageHandler();
+        $this->prepareTestFiles();
     }
 
     protected function tearDown(): void
     {
-        parent::tearDown();
+        $this->cleanupTestFiles();
 
-        $this->filesystem->remove($this->testFilePath);
+        parent::tearDown();
     }
 
     public function testUpload(): void
     {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            $this->bucketName,
-            $this->acl
-        );
+        $this->assertFalse($this->masterImageHandler->exists($this->destination));
 
-        $masterImageHandler->upload(
-            $this->testFilePath,
-            $this->destination
-        );
+        $this->masterImageHandler->upload($this->source, $this->destination);
 
-        self::assertFalse($this->filesystem->exists($this->testFilePath));
+        $this->assertTrue($this->masterImageHandler->exists($this->destination));
+        $this->assertFalse($this->filesystem->exists($this->source));
     }
 
     public function testCopy(): void
     {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            $this->bucketName,
-            $this->acl
-        );
+        $this->assertFalse($this->masterImageHandler->exists($this->destination));
 
-        $masterImageHandler->copy(
-            $this->testFilePath,
-            $this->destination
-        );
+        $this->masterImageHandler->copy($this->source, $this->destination);
 
-        self::assertTrue($this->filesystem->exists($this->testFilePath));
+        $this->assertTrue($this->masterImageHandler->exists($this->destination));
     }
 
-    public function testUploadWithWrongBucket(): void
-    {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            'wrongBucket',
-            $this->acl
-        );
-
-        self::expectException(S3Exception::class);
-
-        $masterImageHandler->upload(
-            $this->testFilePath,
-            $this->destination
-        );
-    }
-
-    public function testUploadWithWrongFile(): void
-    {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            $this->bucketName,
-            $this->acl
-        );
-
-        self::expectException(\RuntimeException::class);
-
-        $masterImageHandler->upload(
-            'wrong-file',
-            $this->destination
-        );
-    }
-
-    public function testUploadWithWrongAcl(): void
-    {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            $this->bucketName,
-            'wrong-acl'
-        );
-
-        self::expectException(S3Exception::class);
-
-        $masterImageHandler->upload(
-            $this->testFilePath,
-            $this->destination
-        );
-    }
-
-    /**
-     * @doesNotPerformAssertions
-     */
     public function testRemove(): void
     {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            $this->bucketName,
-            $this->acl
-        );
+        $this->masterImageHandler->upload($this->source, $this->destination);
+        $this->masterImageHandler->remove($this->destination);
 
-        $masterImageHandler->upload(
-            $this->testFilePath,
-            $this->destination
-        );
-
-        $masterImageHandler->remove($this->destination);
-    }
-
-    public function testRemoveWithWrongBucket(): void
-    {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            'wrongBucket',
-            $this->acl
-        );
-
-        self::expectException(S3Exception::class);
-
-        $masterImageHandler->remove($this->destination);
-    }
-
-    public function testExists(): void
-    {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            $this->bucketName,
-            $this->acl
-        );
-
-        $masterImageHandler->upload(
-            $this->testFilePath,
-            $this->destination
-        );
-
-        self::assertTrue($masterImageHandler->exists($this->destination));
+        $this->assertFalse($this->masterImageHandler->exists($this->destination));
     }
 
     public function testExistsWithWrongFile(): void
     {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
-            $this->filesystem,
-            $this->bucketName,
-            $this->acl
-        );
-
-        self::assertFalse($masterImageHandler->exists('wrong-file'));
+        $this->assertFalse($this->masterImageHandler->exists('wrong-file'));
     }
 
-    public function testExistsWithWrongBucket(): void
+    private function initImageHandler(): void
     {
-        $masterImageHandler = new MasterImageHandler(
-            $this->s3client,
+        $container = (new TestContainerFactory())->create();
+        $this->filesystem = new Filesystem();
+        $s3Client = new S3Client([
+            'region' => $container->getParameter('aws.s3.region'),
+            'version' => $container->getParameter('aws.s3.version'),
+            'credentials' => (new Credentials(
+                $container->getParameter('aws.s3.key'),
+                $container->getParameter('aws.s3.secret')
+            ))
+        ]);
+        $this->masterImageHandler = new MasterImageHandler(
+            $s3Client,
             $this->filesystem,
-            'wrongBucket',
-            $this->acl
+            $container->getParameter('aws.s3.image.bucket'),
+            $container->getParameter('aws.s3.image.bucket.acl')
         );
+    }
 
-        self::assertFalse($masterImageHandler->exists($this->destination));
+    private function prepareTestFiles(): void
+    {
+        $this->source = uniqid(__DIR__ . '/Fixtures/test-file-', true) . '.txt';
+        $this->filesystem->touch($this->source);
+        $this->destination = uniqid('test-pictures/test-file-', true) . '.txt';
+    }
+
+    private function cleanupTestFiles(): void
+    {
+        $this->filesystem->remove($this->source);
+        $this->masterImageHandler->remove($this->destination);
     }
 }
