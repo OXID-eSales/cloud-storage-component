@@ -10,10 +10,10 @@ declare(strict_types=1);
 namespace OxidEsales\AwsS3Component\Service;
 
 use Aws\S3\S3Client;
-use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\MasterImageHandlerInterface;
+use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
 use Symfony\Component\Filesystem\Filesystem;
 
-class MasterImageHandler implements MasterImageHandlerInterface
+class MasterImageHandler implements ImageHandlerInterface
 {
     /** @var S3Client */
     private $s3Client;

@@ -12,7 +12,7 @@ namespace OxidEsales\AwsS3Component\Tests\Integration\Service;
 use Aws\Credentials\Credentials;
 use Aws\S3\S3Client;
 use OxidEsales\AwsS3Component\Service\MasterImageHandler;
-use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\MasterImageHandlerInterface;
+use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
 use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
@@ -25,7 +25,7 @@ final class MasterImageHandlerTest extends TestCase
     private $destination;
     /** @var Filesystem */
     private $filesystem;
-    /** @var MasterImageHandlerInterface */
+    /** @var ImageHandlerInterface */
     private $masterImageHandler;
 
     protected function setUp(): void
