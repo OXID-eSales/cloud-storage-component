@@ -45,7 +45,17 @@ class S3ClientFactory
      */
     public function getS3Client(): S3Client
     {
-        $credentials = new Credentials($this->key, $this->secret);
+        // Use the default credentials provider chain when credentials are set to null.
+        // https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_credentials.html
+        $credentials = null;
+
+        // Initialize the credentials only when both key & secret are provided through
+        // the var/configuration/configurable_services.yaml file. Setting this overrides
+        // the default credentials provider.
+        if ($this->key != '' && $this->secret != '')
+        {
+            $credentials = new Credentials($this->key, $this->secret);
+        }
 
         return new S3Client([
           'region'  => $this->region,
