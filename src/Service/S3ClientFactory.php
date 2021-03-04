@@ -14,30 +14,15 @@ use Aws\Credentials\Credentials;
 
 class S3ClientFactory
 {
-    /** @var string */
-    private $key;
-
-    /** @var string */
-    private $secret;
-
-    /** @var string */
-    private $region;
-
-    /** @var string */
-    private $version;
+    /** @var array */
+    private $configs;
 
     /**
-     * @param string $key
-     * @param string $secret
-     * @param string $region
-     * @param string $version
+     * @param array $configs
      */
-    public function __construct(string $key, string $secret, string $region, string $version)
+    public function __construct(array $configs)
     {
-        $this->key = $key;
-        $this->secret = $secret;
-        $this->region = $region;
-        $this->version = $version;
+        $this->configs = $configs;
     }
 
     /**
@@ -45,12 +30,22 @@ class S3ClientFactory
      */
     public function getS3Client(): S3Client
     {
-        $credentials = new Credentials($this->key, $this->secret);
+        $this->setCredentials();
 
-        return new S3Client([
-          'region'  => $this->region,
-          'version' => $this->version,
-          'credentials' => $credentials
-        ]);
+        return new S3Client($this->configs);
+    }
+
+    private function setCredentials(): void
+    {
+        if (array_key_exists('credentials', $this->configs)) {
+            $credentials = $this->configs['credentials'];
+
+            $this->configs['credentials'] = new Credentials(
+                $credentials['key'],
+                $credentials['secret'],
+                $credentials['token'],
+                $credentials['expires']
+            );
+        }
     }
 }

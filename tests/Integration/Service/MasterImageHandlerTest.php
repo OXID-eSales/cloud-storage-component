@@ -79,19 +79,21 @@ final class MasterImageHandlerTest extends TestCase
     {
         $container = (new TestContainerFactory())->create();
         $this->filesystem = new Filesystem();
+
+        $s3ClientConfigs = $container->getParameter('aws.s3.client.configs');
         $s3Client = new S3Client([
-            'region' => $container->getParameter('aws.s3.region'),
-            'version' => $container->getParameter('aws.s3.version'),
+            'region' => $s3ClientConfigs['region'],
+            'version' => $s3ClientConfigs['version'],
             'credentials' => (new Credentials(
-                $container->getParameter('aws.s3.key'),
-                $container->getParameter('aws.s3.secret')
+                $s3ClientConfigs['credentials']['key'],
+                $s3ClientConfigs['credentials']['secret']
             ))
         ]);
+
         $this->masterImageHandler = new MasterImageHandler(
             $s3Client,
             $this->filesystem,
-            $container->getParameter('aws.s3.image.bucket'),
-            $container->getParameter('aws.s3.image.bucket.acl')
+            $container->getParameter('aws.s3.image.bucket')
         );
     }
 

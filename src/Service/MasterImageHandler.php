@@ -21,28 +21,22 @@ class MasterImageHandler implements ImageHandlerInterface
     /** @var Filesystem */
     private $filesystem;
 
-    /** @var string */
-    private $imageBucketName;
-
-    /** @var string */
-    private $imageBucketAcl;
+    /** @var array */
+    private $imageBucketInfo;
 
     /**
      * @param S3Client   $s3Client
      * @param Filesystem $filesystem
-     * @param string     $imageBucketName
-     * @param string     $imageBucketAcl
+     * @param array      $imageBucketInfo
      */
     public function __construct(
         S3Client $s3Client,
         Filesystem $filesystem,
-        string $imageBucketName,
-        string $imageBucketAcl
+        array $imageBucketInfo
     ) {
         $this->s3Client = $s3Client;
         $this->filesystem = $filesystem;
-        $this->imageBucketName = $imageBucketName;
-        $this->imageBucketAcl = $imageBucketAcl;
+        $this->imageBucketInfo = $imageBucketInfo;
     }
 
     /**
@@ -77,7 +71,7 @@ class MasterImageHandler implements ImageHandlerInterface
     public function remove(string $path): void
     {
         $this->s3Client->deleteObject([
-            'Bucket' => $this->imageBucketName,
+            'Bucket' => $this->imageBucketInfo['name'],
             'Key'    => $path
         ]);
     }
@@ -90,7 +84,7 @@ class MasterImageHandler implements ImageHandlerInterface
     public function exists(string $path): bool
     {
         return $this->s3Client->doesObjectExist(
-            $this->imageBucketName,
+            $this->imageBucketInfo['name'],
             $path
         );
     }
@@ -98,10 +92,10 @@ class MasterImageHandler implements ImageHandlerInterface
     private function putObject(string $sourceFile, string $destinationInBucket): void
     {
         $object = [
-            'Bucket' => $this->imageBucketName,
+            'Bucket' => $this->imageBucketInfo['name'],
             'Key'    => $destinationInBucket,
             'SourceFile' => $sourceFile,
-            'ACL'    => $this->imageBucketAcl,
+            'ACL'    => $this->imageBucketInfo['acl'] ?? 'public-read',
         ];
 
         $this->s3Client->putObject($object);

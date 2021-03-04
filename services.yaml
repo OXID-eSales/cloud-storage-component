@@ -6,10 +6,7 @@ services:
   OxidEsales\AwsS3Component\Service\S3ClientFactory:
     class: OxidEsales\AwsS3Component\Service\S3ClientFactory
     arguments:
-      - '%aws.s3.key%'
-      - '%aws.s3.secret%'
-      - '%aws.s3.region%'
-      - '%aws.s3.version%'
+      - '%aws.s3.client.configs%'
 
   Aws\S3\S3Client:
     class: Aws\S3\S3Client
@@ -21,5 +18,4 @@ services:
       - '@Aws\S3\S3Client'
       - '@oxid_esales.symfony.file_system'
       - '%aws.s3.image.bucket%'
-      - '%aws.s3.image.bucket.acl%'
     public: true
