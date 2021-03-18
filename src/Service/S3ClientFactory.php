@@ -43,8 +43,8 @@ class S3ClientFactory
             $this->configs['credentials'] = new Credentials(
                 $credentials['key'],
                 $credentials['secret'],
-                $credentials['token'],
-                $credentials['expires']
+                $credentials['token'] ?? null,
+                $credentials['expires'] ?? null
             );
         }
     }
