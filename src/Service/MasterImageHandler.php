@@ -9,34 +9,28 @@ declare(strict_types=1);
 
 namespace OxidEsales\AwsS3Component\Service;
 
-use Aws\S3\S3Client;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use League\Flysystem\Filesystem as ImageBucketFilesystem;
 
 class MasterImageHandler implements ImageHandlerInterface
 {
-    /** @var S3Client */
-    private $s3Client;
-
     /** @var Filesystem */
     private $filesystem;
 
-    /** @var array */
-    private $imageBucketInfo;
+    /** @var ImageBucketFilesystem */
+    private $imageBucketFilesystem;
 
     /**
-     * @param S3Client   $s3Client
-     * @param Filesystem $filesystem
-     * @param array      $imageBucketInfo
+     * @param Filesystem                            $filesystem
+     * @param ImageBucketFilesystemServiceInterface $imageBucketFilesystemService
      */
     public function __construct(
-        S3Client $s3Client,
         Filesystem $filesystem,
-        array $imageBucketInfo
+        ImageBucketFilesystemServiceInterface $imageBucketFilesystemService
     ) {
-        $this->s3Client = $s3Client;
         $this->filesystem = $filesystem;
-        $this->imageBucketInfo = $imageBucketInfo;
+        $this->imageBucketFilesystem = $imageBucketFilesystemService->getFilesystem();
     }
 
     /**
@@ -45,9 +39,9 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function upload(string $source, string $destination): void
     {
-        $this->putObject(
-            $source,
-            $destination
+        $this->imageBucketFilesystem->write(
+            $destination,
+            file_get_contents($source)
         );
 
         $this->filesystem->remove($source);
@@ -59,9 +53,9 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function copy(string $source, string $destination): void
     {
-        $this->putObject(
-            $source,
-            $destination
+        $this->imageBucketFilesystem->write(
+            $destination,
+            file_get_contents($source)
         );
     }
 
@@ -70,10 +64,7 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function remove(string $path): void
     {
-        $this->s3Client->deleteObject([
-            'Bucket' => $this->imageBucketInfo['name'],
-            'Key'    => $path
-        ]);
+        $this->imageBucketFilesystem->delete($path);
     }
 
     /**
@@ -83,21 +74,6 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function exists(string $path): bool
     {
-        return $this->s3Client->doesObjectExist(
-            $this->imageBucketInfo['name'],
-            $path
-        );
-    }
-
-    private function putObject(string $sourceFile, string $destinationInBucket): void
-    {
-        $object = [
-            'Bucket' => $this->imageBucketInfo['name'],
-            'Key'    => $destinationInBucket,
-            'SourceFile' => $sourceFile,
-            'ACL'    => $this->imageBucketInfo['acl'] ?? 'public-read',
-        ];
-
-        $this->s3Client->putObject($object);
+        return $this->imageBucketFilesystem->fileExists($path);
     }
 }

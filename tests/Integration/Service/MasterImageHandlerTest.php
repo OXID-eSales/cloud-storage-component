@@ -9,22 +9,27 @@ declare(strict_types=1);
 
 namespace OxidEsales\AwsS3Component\Tests\Integration\Service;
 
-use Aws\Credentials\Credentials;
-use Aws\S3\S3Client;
 use OxidEsales\AwsS3Component\Service\MasterImageHandler;
+use OxidEsales\AwsS3Component\Service\S3ClientService;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
+use OxidEsales\EshopCommunity\Tests\Integration\Internal\ContainerTrait;
 use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
-use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem;
+use PHPUnit\Framework\TestCase;
 
 final class MasterImageHandlerTest extends TestCase
 {
+    use ContainerTrait;
+
     /** @var string */
     private $source;
+
     /** @var string */
     private $destination;
+
     /** @var Filesystem */
     private $filesystem;
+
     /** @var ImageHandlerInterface */
     private $masterImageHandler;
 
@@ -32,7 +37,9 @@ final class MasterImageHandlerTest extends TestCase
     {
         parent::setUp();
 
-        $this->initImageHandler();
+        $this->filesystem = new Filesystem();
+        $this->masterImageHandler = $this->get(ImageHandlerInterface::class);
+
         $this->prepareTestFiles();
     }
 
@@ -73,28 +80,6 @@ final class MasterImageHandlerTest extends TestCase
     public function testExistsWithWrongFile(): void
     {
         $this->assertFalse($this->masterImageHandler->exists('wrong-file'));
-    }
-
-    private function initImageHandler(): void
-    {
-        $container = (new TestContainerFactory())->create();
-        $this->filesystem = new Filesystem();
-
-        $s3ClientConfigs = $container->getParameter('aws.s3.client.configs');
-        $s3Client = new S3Client([
-            'region' => $s3ClientConfigs['region'],
-            'version' => $s3ClientConfigs['version'],
-            'credentials' => (new Credentials(
-                $s3ClientConfigs['credentials']['key'],
-                $s3ClientConfigs['credentials']['secret']
-            ))
-        ]);
-
-        $this->masterImageHandler = new MasterImageHandler(
-            $s3Client,
-            $this->filesystem,
-            $container->getParameter('aws.s3.image.bucket')
-        );
     }
 
     private function prepareTestFiles(): void

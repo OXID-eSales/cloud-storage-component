@@ -29,17 +29,14 @@ parameters:
       expires: sample-expires
     region: sample-region
     version: sample-version
-  aws.s3.image.bucket:
-    name: sample-image.bucket
-    acl: sample-image.bucket.acl
+  aws.s3.image.bucket: sample-image.bucket.name
 ```
 
 **Important notes:** 
 
 - To use the default credentials you have already set, `credentials` parameter should not be set.
 - `key` and `secret` are mandatory, and `Token` and `expires` are optional.
-- `region` and `version` are mandatory, but other parametes can be set optionally (More info: https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_configuration.html) 
-- For image bucket, `name` is mandatory, but if `acl` is not set, the default value (public-read) will be set automatically.
+- `region` and `version` are mandatory, but other parametes can be set optionally (More info: https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_configuration.html)
 
 ## How to install component for development?
 

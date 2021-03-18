@@ -12,7 +12,7 @@ namespace OxidEsales\AwsS3Component\Service;
 use Aws\S3\S3Client;
 use Aws\Credentials\Credentials;
 
-class S3ClientFactory
+class S3ClientService implements S3ClientServiceInterface
 {
     /** @var array */
     private $configs;
