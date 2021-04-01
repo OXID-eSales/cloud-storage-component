@@ -9,28 +9,28 @@ declare(strict_types=1);
 
 namespace OxidEsales\AwsS3Component\Service;
 
+use League\Flysystem\Filesystem as ExternalFilesystem;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
-use Symfony\Component\Filesystem\Filesystem;
-use League\Flysystem\Filesystem as ImageBucketFilesystem;
+use Symfony\Component\Filesystem\Filesystem as LocalFilesystem;
 
 class MasterImageHandler implements ImageHandlerInterface
 {
-    /** @var Filesystem */
-    private $filesystem;
+    /** @var LocalFilesystem */
+    private $localFilesystem;
 
-    /** @var ImageBucketFilesystem */
-    private $imageBucketFilesystem;
+    /** @var ExternalFilesystem */
+    private $externalFilesystem;
 
     /**
-     * @param Filesystem                            $filesystem
-     * @param ImageBucketFilesystemServiceInterface $imageBucketFilesystemService
+     * @param LocalFilesystem $filesystem
+     * @param ExternalFilesystem $externalFilesystem
      */
     public function __construct(
-        Filesystem $filesystem,
-        ImageBucketFilesystemServiceInterface $imageBucketFilesystemService
+        LocalFilesystem $filesystem,
+        ExternalFilesystem $externalFilesystem
     ) {
-        $this->filesystem = $filesystem;
-        $this->imageBucketFilesystem = $imageBucketFilesystemService->getFilesystem();
+        $this->localFilesystem = $filesystem;
+        $this->externalFilesystem = $externalFilesystem;
     }
 
     /**
@@ -39,12 +39,12 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function upload(string $source, string $destination): void
     {
-        $this->imageBucketFilesystem->write(
+        $this->externalFilesystem->write(
             $destination,
             file_get_contents($source)
         );
 
-        $this->filesystem->remove($source);
+        $this->localFilesystem->remove($source);
     }
 
     /**
@@ -53,7 +53,7 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function copy(string $source, string $destination): void
     {
-        $this->imageBucketFilesystem->write(
+        $this->externalFilesystem->write(
             $destination,
             file_get_contents($source)
         );
@@ -64,7 +64,7 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function remove(string $path): void
     {
-        $this->imageBucketFilesystem->delete($path);
+        $this->externalFilesystem->delete($path);
     }
 
     /**
@@ -74,6 +74,6 @@ class MasterImageHandler implements ImageHandlerInterface
      */
     public function exists(string $path): bool
     {
-        return $this->imageBucketFilesystem->fileExists($path);
+        return $this->externalFilesystem->fileExists($path);
     }
 }

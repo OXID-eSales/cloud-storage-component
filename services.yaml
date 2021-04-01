@@ -1,22 +1,35 @@
 services:
   _defaults:
     autowire: true
-    public: false
 
-  OxidEsales\AwsS3Component\Service\S3ClientServiceInterface:
-    class: OxidEsales\AwsS3Component\Service\S3ClientService
+  Aws\Credentials\Credentials:
     arguments:
-      - '%aws.s3.client.configs%'
+      - "@=parameter('aws.s3.client.configs')['credentials']['key']"
+      - "@=parameter('aws.s3.client.configs')['credentials']['secret']"
+      - "@=parameter('aws.s3.client.configs')['credentials']['token']"
+      - "@=parameter('aws.s3.client.configs')['credentials']['expires']"
 
-  OxidEsales\AwsS3Component\Service\ImageBucketFilesystemServiceInterface:
-    class: OxidEsales\AwsS3Component\Service\ImageBucketFilesystemService
+  Aws\S3\S3Client:
     arguments:
-      - '@OxidEsales\AwsS3Component\Service\S3ClientServiceInterface'
-      - '%aws.s3.image.bucket%'
+        - {
+          credentials: "@Aws\\Credentials\\Credentials",
+          region: "@=parameter('aws.s3.client.configs')['region']",
+          version: "@=parameter('aws.s3.client.configs')['version']"
+        }
+
+  League\Flysystem\AwsS3V3\AwsS3V3Adapter:
+    arguments:
+      - "@Aws\\S3\\S3Client"
+      - "@=parameter('aws.s3.image.bucket')"
+
+  League\Flysystem\Filesystem:
+    arguments:
+      - "@League\\Flysystem\\AwsS3V3\\AwsS3V3Adapter"
+      - { visibility: "public" }
 
   OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface:
     class: OxidEsales\AwsS3Component\Service\MasterImageHandler
     arguments:
-      - '@oxid_esales.symfony.file_system'
-      - '@OxidEsales\AwsS3Component\Service\ImageBucketFilesystemServiceInterface'
+      - "@oxid_esales.symfony.file_system"
+      - "@League\\Flysystem\\Filesystem"
     public: true

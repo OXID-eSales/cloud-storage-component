@@ -9,13 +9,11 @@ declare(strict_types=1);
 
 namespace OxidEsales\AwsS3Component\Tests\Integration\Service;
 
-use OxidEsales\AwsS3Component\Service\MasterImageHandler;
 use OxidEsales\AwsS3Component\Service\S3ClientService;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
 use OxidEsales\EshopCommunity\Tests\Integration\Internal\ContainerTrait;
-use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
-use Symfony\Component\Filesystem\Filesystem;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Filesystem\Filesystem;
 
 final class MasterImageHandlerTest extends TestCase
 {
