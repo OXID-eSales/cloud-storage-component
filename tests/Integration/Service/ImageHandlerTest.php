@@ -17,7 +17,7 @@ use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
 use PHPUnit\Framework\TestCase;
 use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
-final class MasterImageHandlerTest extends TestCase
+final class ImageHandlerTest extends TestCase
 {
     use ContainerTrait;
 
@@ -30,7 +30,7 @@ final class MasterImageHandlerTest extends TestCase
     /** @var string */
     private $fixturePath = __DIR__ . '/Fixtures';
     /** @var ImageHandlerInterface */
-    private $masterImageHandler;
+    private $imageHandler;
 
     protected function setUp(): void
     {
@@ -49,42 +49,42 @@ final class MasterImageHandlerTest extends TestCase
 
     public function testUpload(): void
     {
-        $this->assertFalse($this->masterImageHandler->exists($this->destinationFile));
+        $this->assertFalse($this->imageHandler->exists($this->destinationFile));
 
-        $this->masterImageHandler->upload($this->sourceFile, $this->destinationFile);
+        $this->imageHandler->upload($this->sourceFile, $this->destinationFile);
 
-        $this->assertTrue($this->masterImageHandler->exists($this->destinationFile));
+        $this->assertTrue($this->imageHandler->exists($this->destinationFile));
     }
 
     public function testUploadWillRemoveSourceFile(): void
     {
         $this->assertTrue($this->fixtures->exists($this->sourceFile));
 
-        $this->masterImageHandler->upload($this->sourceFile, $this->destinationFile);
+        $this->imageHandler->upload($this->sourceFile, $this->destinationFile);
 
         $this->assertFalse($this->fixtures->exists($this->sourceFile));
     }
 
     public function testCopy(): void
     {
-        $this->assertFalse($this->masterImageHandler->exists($this->destinationFile));
+        $this->assertFalse($this->imageHandler->exists($this->destinationFile));
 
-        $this->masterImageHandler->copy($this->sourceFile, $this->destinationFile);
+        $this->imageHandler->copy($this->sourceFile, $this->destinationFile);
 
-        $this->assertTrue($this->masterImageHandler->exists($this->destinationFile));
+        $this->assertTrue($this->imageHandler->exists($this->destinationFile));
     }
 
     public function testRemove(): void
     {
-        $this->masterImageHandler->upload($this->sourceFile, $this->destinationFile);
-        $this->masterImageHandler->remove($this->destinationFile);
+        $this->imageHandler->upload($this->sourceFile, $this->destinationFile);
+        $this->imageHandler->remove($this->destinationFile);
 
-        $this->assertFalse($this->masterImageHandler->exists($this->destinationFile));
+        $this->assertFalse($this->imageHandler->exists($this->destinationFile));
     }
 
     public function testExistsWithWrongFile(): void
     {
-        $this->assertFalse($this->masterImageHandler->exists('wrong-file'));
+        $this->assertFalse($this->imageHandler->exists('wrong-file'));
     }
 
     private function prepareFixtureFiles(): void
@@ -98,13 +98,13 @@ final class MasterImageHandlerTest extends TestCase
     private function clearFixtureFiles(): void
     {
         $this->fixtures->remove($this->sourceFile);
-        $this->masterImageHandler->remove($this->destinationFile);
+        $this->imageHandler->remove($this->destinationFile);
     }
 
     private function initImageHandler(): void
     {
         $this->switchFilesystemAdapterForTesting();
-        $this->masterImageHandler = $this->get(ImageHandlerInterface::class);
+        $this->imageHandler = $this->get(ImageHandlerInterface::class);
     }
 
     private function switchFilesystemAdapterForTesting(): void

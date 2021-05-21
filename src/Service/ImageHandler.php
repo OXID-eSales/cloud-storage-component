@@ -13,7 +13,7 @@ use League\Flysystem\Filesystem as ExternalFilesystem;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
 use Symfony\Component\Filesystem\Filesystem as LocalFilesystem;
 
-class MasterImageHandler implements ImageHandlerInterface
+class ImageHandler implements ImageHandlerInterface
 {
     /** @var LocalFilesystem */
     private $localFilesystem;
