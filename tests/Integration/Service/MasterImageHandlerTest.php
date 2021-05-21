@@ -9,25 +9,26 @@ declare(strict_types=1);
 
 namespace OxidEsales\AwsS3Component\Tests\Integration\Service;
 
-use OxidEsales\AwsS3Component\Service\S3ClientService;
+use League\Flysystem\Filesystem as FlyFilesystem;
+use League\Flysystem\Local\LocalFilesystemAdapter;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
 use OxidEsales\EshopCommunity\Tests\Integration\Internal\ContainerTrait;
+use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
 use PHPUnit\Framework\TestCase;
-use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 final class MasterImageHandlerTest extends TestCase
 {
     use ContainerTrait;
 
     /** @var string */
-    private $source;
-
+    private $sourceFile;
     /** @var string */
-    private $destination;
-
-    /** @var Filesystem */
-    private $filesystem;
-
+    private $destinationFile;
+    /** @var SymfonyFilesystem */
+    private $fixtures;
+    /** @var string */
+    private $fixturePath = __DIR__ . '/Fixtures';
     /** @var ImageHandlerInterface */
     private $masterImageHandler;
 
@@ -35,44 +36,50 @@ final class MasterImageHandlerTest extends TestCase
     {
         parent::setUp();
 
-        $this->filesystem = new Filesystem();
-        $this->masterImageHandler = $this->get(ImageHandlerInterface::class);
-
-        $this->prepareTestFiles();
+        $this->initImageHandler();
+        $this->prepareFixtureFiles();
     }
 
     protected function tearDown(): void
     {
-        $this->cleanupTestFiles();
+        $this->clearFixtureFiles();
 
         parent::tearDown();
     }
 
     public function testUpload(): void
     {
-        $this->assertFalse($this->masterImageHandler->exists($this->destination));
+        $this->assertFalse($this->masterImageHandler->exists($this->destinationFile));
 
-        $this->masterImageHandler->upload($this->source, $this->destination);
+        $this->masterImageHandler->upload($this->sourceFile, $this->destinationFile);
 
-        $this->assertTrue($this->masterImageHandler->exists($this->destination));
-        $this->assertFalse($this->filesystem->exists($this->source));
+        $this->assertTrue($this->masterImageHandler->exists($this->destinationFile));
+    }
+
+    public function testUploadWillRemoveSourceFile(): void
+    {
+        $this->assertTrue($this->fixtures->exists($this->sourceFile));
+
+        $this->masterImageHandler->upload($this->sourceFile, $this->destinationFile);
+
+        $this->assertFalse($this->fixtures->exists($this->sourceFile));
     }
 
     public function testCopy(): void
     {
-        $this->assertFalse($this->masterImageHandler->exists($this->destination));
+        $this->assertFalse($this->masterImageHandler->exists($this->destinationFile));
 
-        $this->masterImageHandler->copy($this->source, $this->destination);
+        $this->masterImageHandler->copy($this->sourceFile, $this->destinationFile);
 
-        $this->assertTrue($this->masterImageHandler->exists($this->destination));
+        $this->assertTrue($this->masterImageHandler->exists($this->destinationFile));
     }
 
     public function testRemove(): void
     {
-        $this->masterImageHandler->upload($this->source, $this->destination);
-        $this->masterImageHandler->remove($this->destination);
+        $this->masterImageHandler->upload($this->sourceFile, $this->destinationFile);
+        $this->masterImageHandler->remove($this->destinationFile);
 
-        $this->assertFalse($this->masterImageHandler->exists($this->destination));
+        $this->assertFalse($this->masterImageHandler->exists($this->destinationFile));
     }
 
     public function testExistsWithWrongFile(): void
@@ -80,16 +87,34 @@ final class MasterImageHandlerTest extends TestCase
         $this->assertFalse($this->masterImageHandler->exists('wrong-file'));
     }
 
-    private function prepareTestFiles(): void
+    private function prepareFixtureFiles(): void
     {
-        $this->source = uniqid(__DIR__ . '/Fixtures/test-file-', true) . '.txt';
-        $this->filesystem->touch($this->source);
-        $this->destination = uniqid('test-pictures/test-file-', true) . '.txt';
+        $this->fixtures = new SymfonyFilesystem();
+        $this->sourceFile = uniqid("$this->fixturePath/source/source-file-", true);
+        $this->fixtures->touch($this->sourceFile);
+        $this->destinationFile = uniqid('destination-file-', true);
     }
 
-    private function cleanupTestFiles(): void
+    private function clearFixtureFiles(): void
     {
-        $this->filesystem->remove($this->source);
-        $this->masterImageHandler->remove($this->destination);
+        $this->fixtures->remove($this->sourceFile);
+        $this->masterImageHandler->remove($this->destinationFile);
+    }
+
+    private function initImageHandler(): void
+    {
+        $this->switchFilesystemAdapterForTesting();
+        $this->masterImageHandler = $this->get(ImageHandlerInterface::class);
+    }
+
+    private function switchFilesystemAdapterForTesting(): void
+    {
+        if ($this->container === null) {
+            /** Use one of easy-configurable implementations of FilesystemAdapter available */
+            $adapter = new LocalFilesystemAdapter("$this->fixturePath/destination/");
+            $this->container = (new TestContainerFactory())->create();
+            $this->container->set(FlyFilesystem::class, new FlyFilesystem($adapter));
+            $this->container->compile();
+        }
     }
 }
