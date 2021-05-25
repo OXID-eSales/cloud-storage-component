@@ -12,15 +12,13 @@ namespace OxidEsales\AwsS3Component\Tests\Integration\Service;
 use League\Flysystem\Filesystem as FlyFilesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;
-use OxidEsales\EshopCommunity\Tests\Integration\Internal\ContainerTrait;
 use OxidEsales\EshopCommunity\Tests\Integration\Internal\TestContainerFactory;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
 
 final class ImageHandlerTest extends TestCase
 {
-    use ContainerTrait;
-
     /** @var string */
     private $sourceFile;
     /** @var string */
@@ -31,6 +29,8 @@ final class ImageHandlerTest extends TestCase
     private $fixturePath = __DIR__ . '/Fixtures';
     /** @var ImageHandlerInterface */
     private $imageHandler;
+    /** @var ContainerBuilder */
+    private $container;
 
     protected function setUp(): void
     {
@@ -104,17 +104,15 @@ final class ImageHandlerTest extends TestCase
     private function initImageHandler(): void
     {
         $this->switchFilesystemAdapterForTesting();
-        $this->imageHandler = $this->get(ImageHandlerInterface::class);
+        $this->imageHandler = $this->container->get(ImageHandlerInterface::class);
     }
 
     private function switchFilesystemAdapterForTesting(): void
     {
-        if ($this->container === null) {
-            /** Use one of easy-configurable implementations of FilesystemAdapter available */
-            $adapter = new LocalFilesystemAdapter("$this->fixturePath/destination/");
-            $this->container = (new TestContainerFactory())->create();
-            $this->container->set(FlyFilesystem::class, new FlyFilesystem($adapter));
-            $this->container->compile();
-        }
+        /** Use one of easy-configurable implementations of FilesystemAdapter available */
+        $adapter = new LocalFilesystemAdapter("$this->fixturePath/destination/");
+        $this->container = (new TestContainerFactory())->create();
+        $this->container->set(FlyFilesystem::class, new FlyFilesystem($adapter));
+        $this->container->compile();
     }
 }
