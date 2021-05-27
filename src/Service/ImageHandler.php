@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-namespace OxidEsales\AwsS3Component\Service;
+namespace OxidEsales\CloudStorageComponent\Service;
 
 use League\Flysystem\Filesystem as ExternalFilesystem;
 use OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface;

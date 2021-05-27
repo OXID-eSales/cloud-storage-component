@@ -7,7 +7,7 @@
 
 declare(strict_types=1);
 
-namespace OxidEsales\AwsS3Component\Tests\Integration\Service;
+namespace OxidEsales\CloudStorageComponent\Tests\Integration\Service;
 
 use League\Flysystem\Filesystem as FlyFilesystem;
 use League\Flysystem\Local\LocalFilesystemAdapter;

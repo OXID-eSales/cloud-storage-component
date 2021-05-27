@@ -1,63 +1,63 @@
-OXID eShop AWS S3 component
-===========================
+OXID eShop Cloud Storage component
+==================================
 
-This component is developed to make a communication with AWS S3, such as putting an object, 
-removing it, and other operations.
+Facilitates integration of OXID eShop with cloud storage systems (e.g. AWS S3) 
+over [FlySystem storage library](https://github.com/thephpleague/flysystem).
 
-One of the features that we have provided in this component is the ability to store and manage 
-the shop images in AWS S3 buckets.
-In fact, after installing this component, shop images (products, promotions, vendors, and manufacturers) will 
-be stored and managed in cloud storage.
+The component uses `League\Flysystem\AwsS3V3\AwsS3V3Adapter` as a default storage adapter implementation.
+Component users can connect to other storage systems by switching to alternative implementation of the `FilesystemAdapter`
+(see [services.yaml](services.yaml)).
+
+**Note:** see [Flysystem documentation](https://flysystem.thephpleague.com/v2/docs/) for the list of supported adapters
+and information about developing a custom one.
 
 ## Installation
 
 1- Run the following command to install the component:
 
 ```bash
-composer require oxid-esales/aws-s3-component:*
+composer require oxid-esales/cloud-storage-component:*
 ```
 
-2- Set the AWS configuration in `<oxid-eshop-root-directory>/var/configuration/configurable_services.yaml`.
-
+2- Set the necessary adapter configuration in `<oxid-eshop-root-directory>/var/configuration/configurable_services.yaml`
 ```bash
+# configuration for the default adapter (AWS S3):
 parameters:
   aws.s3.client.configs:
     credentials:
-      key: sample-key
-      secret: sample-secret
-      token: sample-token
-      expires: sample-expires
-    region: sample-region
-    version: sample-version
-  aws.s3.image.bucket: sample-image.bucket.name
+      key: my-key
+      secret: my-secret
+      token: my-token
+      expires: my-expires
+    region: my-region
+    version: my-version
+  aws.s3.image.bucket: my-bucket
 ```
 
-**Important notes:** 
-
-- To use the default credentials you have already set, `credentials` parameter should not be set.
-- `key` and `secret` are mandatory, and `Token` and `expires` are optional.
-- `region` and `version` are mandatory, but other parametes can be set optionally (More info: https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_configuration.html)
+**Note:**
+see AWS SDK documentation to find out more about AWS S3 configuration parameters:
+https://docs.aws.amazon.com/sdk-for-php/v3/developer-guide/guide_configuration.html
 
 ## How to install component for development?
 
 Checkout component besides OXID eShop `source` directory:
 
 ```bash
-git clone https://github.com/OXID-eSales/aws-s3-component.git
+git clone https://github.com/OXID-eSales/cloud-storage-component.git
 ```
 
 Run composer install command:
 
 ```bash
-cd aws-s3-component
+cd cloud-storage-component
 composer install
 ```
 
 Add dependency to OXID eShop `composer.json` file:
 
 ```bash
-composer config repositories.oxid-esales/aws-s3-component path aws-s3-component
-composer require --dev oxid-esales/aws-s3-component:*
+composer config repositories.oxid-esales/cloud-storage-component path cloud-storage-component
+composer require --dev oxid-esales/cloud-storage-component:*
 ```
 
 ## How to run tests?

@@ -28,7 +28,7 @@ services:
       - { visibility: "public" }
 
   OxidEsales\EshopCommunity\Internal\Framework\FileSystem\ImageHandlerInterface:
-    class: OxidEsales\AwsS3Component\Service\ImageHandler
+    class: OxidEsales\CloudStorageComponent\Service\ImageHandler
     arguments:
       - "@oxid_esales.symfony.file_system"
       - "@League\\Flysystem\\Filesystem"
