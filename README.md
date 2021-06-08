@@ -68,7 +68,7 @@ in `<oxid-eshop-root-directory>/var/configuration/configurable_services.yaml`.
 2- To run tests for the component please define OXID eShop bootstrap file:
 
 ```bash
-vendor/bin/phpunit --bootstrap=../source/bootstrap.php tests/
+vendor/bin/phpunit  --bootstrap ../../../source/bootstrap.php tests/
 ```
 
 ## How to generate image variants when using Amazon S3?
