@@ -1,0 +1,45 @@
+name: tests-php8.0
+
+on: push
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    env:
+      php: 8.0
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.php }}
+
+      - name: Build docker
+        run: |
+          cd /home/runner/work/
+          git clone --depth 1 https://github.com/OXID-eSales/docker-eshop-sdk.git
+          cd docker-eshop-sdk
+          make .env
+          sed "s/PHP_VERSION=.*/PHP_VERSION=${{ env.php }}/" -i .env
+          git clone --depth 1 https://github.com/OXID-eSales/oxideshop_ce.git --branch master --single-branch data/oxideshop
+          mkdir data/oxideshop/debug
+          make permissions
+          make data/oxideshop/vendor/
+          make data/oxideshop/source/config.inc.php
+          docker-compose up -d php
+          sleep 30
+          make reset-db
+
+      - name: Run tests
+        run: |
+          cd /home/runner/work/docker-eshop-sdk/data/oxideshop/
+          composer config repositories.oxid-esales/oxideshop-ee vcs https://github.com/OXID-eSales/cloud-storage-component.git
+          composer require oxid-esales/cloud-storage-component:dev-$(echo ${GITHUB_REF#refs/heads/})
+          cd /home/runner/work/docker-eshop-sdk/
+          docker-compose exec -T --user oxid php php vendor/bin/runtests /var/www/oxideshop/vendor/oxid-esales/cloud-storage-component/tests/
+
